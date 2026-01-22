@@ -3,17 +3,7 @@ import { Button, Container, Row, Col, Badge } from 'react-bootstrap';
 import './App.css';
 
 function App() {
-  var [cont, setCont] = useState(10);
-
-  function minus() {
-    setCont((prev) => prev - 1);
-    console.log(cont);
-  }
-
-  const plus = ()=> {
-    setCont((prev) => prev + 1);
-    console.log(cont);
-  }
+  const [cont, setCont] = useState(10)
 
   return (
     <Container fluid className="py-4">
@@ -21,7 +11,7 @@ function App() {
         <Col>
           <h1>Contador</h1><br/>
           <Badge bg="primary" className="fs-4 px-4 py-2"> El contador cuenta: {cont} </Badge> <br/><br/>
-          <Button variant="success" onClick={() => plus()}>Agregar +1</Button> <Button variant="danger" onClick={minus}> Retirar -1</Button>
+          <Button variant="success" onClick={() => setCont((cont) => cont+1)}>Agregar +1</Button> <Button variant="danger" onClick={() => setCont((cont) => cont-1)}> Retirar -1</Button>
         </Col>
       </Row>
     </Container>
