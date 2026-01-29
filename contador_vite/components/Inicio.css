@@ -1,0 +1,11 @@
+h2 {
+    font-size: 72px;
+    color: rgb(14, 80, 15);
+    background-color: rgb(150, 200, 100);
+    padding: 15px 25px;
+}
+
+h4 {
+    font-size: 24px;
+    color: rgb(0,0,0);
+}

@@ -1,12 +1,10 @@
 import './App.css';
-import Contador from "../components/Contador.jsx"
-import Hola from "../components/Hola.jsx"
+import Inicio from "../components/Inicio"
 
 function App() {
   return (
     <>
-    <Contador/>
-    <Hola/>
+    <Inicio/>
     </>
   )
 }
