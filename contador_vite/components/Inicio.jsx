@@ -3,6 +3,7 @@ import { useState } from "react";
 import Contador from "./Contador.jsx";
 import Hola from "./Hola.jsx";
 import Tareas from "./Tareas.jsx";
+import Directorio from "./Directorio.jsx"
 import "./Inicio.css"
 
 function Inicio() {
@@ -16,6 +17,10 @@ function Inicio() {
         return <Tareas />;
     }
 
+    if (vista === "directorio") {
+        return <Directorio/>
+    }
+
     return(
         <Container>
             <Row>
@@ -23,7 +28,7 @@ function Inicio() {
                     <h2>Bienvenido</h2> <br/>
                     <h4>Elige tu función</h4><br/>
 
-                    <Button variant="primary" onClick={() => setVista('contador')}> Ir al contador </Button> {" "} <Button variant="primary" onClick={() => setVista('tareas')}>Ir al menú de tareas</Button> <br/><br/><br/>
+                    <Button variant="primary" onClick={() => setVista('contador')}> Ir al contador </Button> {" "} <Button variant="primary" onClick={() => setVista('tareas')}>Ir al menú de tareas</Button> {" "} <Button variant="primary" onClick={() => setVista('directorio')}>Ir al menú de directorios</Button> <br/><br/><br/>
                     <Hola/>
                 </Col>
             </Row>

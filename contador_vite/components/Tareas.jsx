@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button, Container, Row, Col, Badge, Card, Form } from 'react-bootstrap';
 import Inicio from "./Inicio.jsx"
+import Modificar from "./Tareas2.jsx"
 
 function Tareas () {
     const [contador, setCont] = useState(0);
-
     const [tasks, setTasks] = useState([])
 
     const [Datos, setDatos] = useState({
@@ -13,7 +13,11 @@ function Tareas () {
     });
 
     const [imagen, setImagen] = useState(null);
+
     const [vista, setVista] = useState("tareas");
+
+    const [subMenu, setSubMenu] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
 
     const handleSubmit = (e) => {
         e.preventDefault(); // Prevent page reload
@@ -49,6 +53,17 @@ function Tareas () {
             }));
         }
     };
+
+    const openModify = (task) => {
+        setEditingTask(task);
+        setSubMenu(true);
+    }
+
+    const handleUpdate = (updatedTask) => {
+        setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
+        setSubMenu(false);
+        setEditingTask(null);
+    }
 
     if (vista === "inicio") {
         return <Inicio/>
@@ -123,6 +138,15 @@ function Tareas () {
                             >
                                 Eliminar
                             </Button>
+                            <Button variant="warning" onClick={() => openModify(tarea)}>
+                                Modificar
+                            </Button>
+                            <Modificar 
+                                isOpen={subMenu} 
+                                onClose={() => { setSubMenu(false); setEditingTask(null); }}
+                                task={editingTask}
+                                onSave={handleUpdate}
+                            />
                             </Card.Body>
                         </Card>
                     </Col>
