@@ -59,7 +59,7 @@ function Tareas () {
         setSubMenu(true);
     }
 
-    const handleUpdate = (updatedTask) => {
+    const handleEditar = (updatedTask) => {
         setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
         setSubMenu(false);
         setEditingTask(null);
@@ -139,13 +139,13 @@ function Tareas () {
                                 Eliminar
                             </Button>
                             <Button variant="warning" onClick={() => openModify(tarea)}>
-                                Modificar
+                                Editar
                             </Button>
                             <Modificar 
                                 isOpen={subMenu} 
                                 onClose={() => { setSubMenu(false); setEditingTask(null); }}
                                 task={editingTask}
-                                onSave={handleUpdate}
+                                onSave={handleEditar}
                             />
                             </Card.Body>
                         </Card>

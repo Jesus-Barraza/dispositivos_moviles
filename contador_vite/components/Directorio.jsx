@@ -13,6 +13,7 @@ const Directorio = () => {
         direccion: "",
         telefono: "",
     });
+    const [activo, setActivo] =useState(false);
 
     if (vista === "inicio") {
         return <Inicio/>
@@ -30,6 +31,7 @@ const Directorio = () => {
                 phone: datos.telefono
             } : item));
             setEditingId(null);
+            setActivo(false);
         } else {
             const alumnos = {
                 id: ide,
@@ -56,13 +58,18 @@ const Directorio = () => {
         }));
     };
 
-    const handleModify = (id) => {
+    const cancelar = (e) => {
+        setActivo(false);
+        setDatos({ nombre: "", direccion: "", telefono: "" });
+    }
+
+    const handleEditar  = (id) => {
         // Start editing: populate form with selected row's data
         const item = tabla.find(t => t.id === id);
         if (!item) return;
         setEditingId(id);
         setDatos({ nombre: item.name, direccion: item.place, telefono: item.phone });
-        
+        setActivo(true);
     }
 
     return (
@@ -106,9 +113,19 @@ const Directorio = () => {
                     Cuidado a la hora de escribir tus datos
                     </Form.Text>
                 </Form.Group>
-                <Button variant="primary" type="submit" onClick={handleSubmit}>
-                    Submit
-                </Button>
+                {
+                    !activo ? (
+                        <>
+                            <Button variant="primary" type="submit" onClick={handleSubmit}> Agregar </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button variant="primary" type="submit" onClick={handleSubmit}> Modificar </Button> {" "}
+                            <Button variant="secondary" type="submit" onClick={cancelar}> Cancelar </Button>
+                        </>
+                    )
+                }
+                
             </Form> <br/><br/>
             <Table striped bordered hover>
                 <thead>
@@ -126,8 +143,8 @@ const Directorio = () => {
                             <td>{tabla.name}</td>
                             <td>{tabla.place}</td>
                             <td>{tabla.phone}</td>
-                            <td onClick={() => setTabla(prev => prev.filter(t => t.id !== tabla.id))} color={"#d82323"}>Borrar</td>
-                            <td onClick={() => handleModify(tabla.id)} color={"#fffb1a"}>modificar</td>
+                            <td><Button variant="danger" onClick={() => setTabla(prev => prev.filter(t => t.id !== tabla.id))}>Borrar</Button> <p/>
+                            <Button variant="warning" onClick={() => handleEditar(tabla.id)}>modificar</Button></td>
                         </tr>
                     ))}
                 </tbody>
