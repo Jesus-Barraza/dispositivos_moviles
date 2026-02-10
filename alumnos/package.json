@@ -1,0 +1,20 @@
+{
+  "name": "alumnos",
+  "version": "1.0.0",
+  "description": "Una descripción",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Esto es una prueba, si sale el error 1 entonces si funciona\"",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mysql2": "^3.16.3"
+  }
+}
