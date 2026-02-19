@@ -1,0 +1,11 @@
+#!/bin/bash
+# Script para iniciar backend y frontend juntos en Linux
+# Da permisos: chmod +x server
+# Ejecuta: ./server
+
+# Abre backend en una terminal
+gnome-terminal -- bash -c "cd $(dirname "$0") && cd .. && npm start; exec bash" &
+# Abre frontend en otra terminal
+gnome-terminal -- bash -c "cd $(dirname "$0") && cd .. && npm run dev; exec bash" &
+
+echo "Ambos servidores (backend y frontend) están iniciándose en terminales separadas."

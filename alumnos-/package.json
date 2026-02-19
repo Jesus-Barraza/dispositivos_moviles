@@ -1,16 +1,26 @@
 {
   "name": "alumnos-",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Una descripción",
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "dev": "vite",
+    "test": "echo \"Esto es una prueba, si sale el error 1 entonces si funciona\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "body-parser": "^2.2.2",
     "bootstrap": "^5.3.8",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mysql2": "^3.17.3",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0"
