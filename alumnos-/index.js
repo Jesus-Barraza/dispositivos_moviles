@@ -1,3 +1,4 @@
+//import { v4 as uuid } from "uuid";
 import mysql from "mysql2/promise";
 import express from "express";
 import bodyParser from "body-parser";
@@ -43,15 +44,85 @@ app.get("/alumnos", async (req, res) => {
     try {
         const sql = "SELECT * FROM alumnos";
         const [rows] = await pool.query(sql);
-        res.status(200).send({ result: rows });
+        return res.status(200).send({ result:rows,  });
     } catch (err) {
-        res.status(500).send({ error: err.message || err });
+        return res.status(500).send({ error: err.message || err });
+    }
+});
+
+//entrada de datos
+app.post("/alumno/agregar", async (req,res) => {
+    try {
+        const {nombre, direccion, telefono} = req.body;
+        //const id = uuid()
+        if (!nombre?.trim() || !direccion?.trim() || !telefono?.trim()) {
+            return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
+        } else {
+            const sql = "INSERT INTO alumnos (nombre, direccion, telefono) VALUES (?,?,?)";
+            const [result] = await pool.query(sql, [nombre, direccion, telefono])
+            return res.status(200).send({ result })
+        }
+    } catch (err) {
+        return res.status(500).send({error: err.message || err})
+    }
+});
+
+app.post("/alumno/borrar", async (req,res) => {
+    try {
+        const {id} = req.body;
+        if (!id) {
+            return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
+        } else {
+            const sql = "DELETE FROM alumnos WHERE id = ?";
+            const [result] = await pool.query(sql, [id])
+            return res.status(200).send({ result })
+        }
+    } catch (err) {
+        return res.status(500).send({error: err.message || err})
+    }
+});
+
+app.post("/alumno/modificar", async (req,res) => {
+    try {
+        const {id, nombre, direccion, telefono} = req.body;
+        if ((id === undefined || id === null || id === "") || !nombre || !direccion || !telefono) {
+            return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
+        } else {
+            const sql = "UPDATE alumnos SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?";
+            const [result] = await pool.query(sql, [nombre, direccion, telefono, id])
+            if (result.affectedRows > 0) { 
+                return res.status(200).send({ result }); 
+            } else { 
+                return res.status(404).send({ error: "No se encontró el alumno con ese ID" }); 
+            }
+        }
+    } catch (err) {
+        return res.status(500).send({error: err.message || err})
+    }
+});
+
+app.post("/alumno/buscar", async (req,res) => {
+    try {
+        const {id} = req.body;
+        if (id === undefined || id === null || id === "") {
+            return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
+        } else {
+            const sql = "SELECT * FROM alumnos WHERE id = ?";
+            const [result] = await pool.query(sql, [id])
+            if (result.length == 0) {
+                return res.status(401).send({ error: "No se encontró el alumno con ese ID" }); 
+            } else {
+                return res.status(200).send({ result })
+            }
+        }
+    } catch (err) {
+        return res.status(500).send({error: err.message || err})
     }
 });
 
 //si no aparece
-app.all("/splat", (req,res) => {
-    res.status(100).send("La ruta no existe")
+app.all("/*splat", (req,res) => {
+    return res.status(404).send({mensaje:"La ruta no existe"})
 })
 
 //escuchar el puerto
