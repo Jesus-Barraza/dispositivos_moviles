@@ -29,6 +29,16 @@ const agregar = () => {
         return <App/>
     };
 
+    const validarNombre = (nombre) => { 
+        const regex = /^[a-zA-Z\s]+$/;
+        return regex.test(nombre) && nombre.trim().length > 2; 
+    }; 
+    
+    const validarCorreo = (correo) => { 
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+        return regex.test(correo); 
+    };
+
     useEffect(() => {
         getAlumnos();
     }, [])
@@ -104,7 +114,32 @@ const agregar = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log(datos);
-        addAlumno(datos)
+        if (!validarNombre(datos.nombre)) { 
+            handleAlerta({ 
+                view:true, 
+                status:true, 
+                title:"Error de validación", 
+                desc:"El nombre debe contener solo letras y al menos 3 caracteres.", 
+            }); 
+            return; 
+        } else { 
+            if (!validarCorreo(datos.correo)) { 
+                handleAlerta({ 
+                    view:true,
+                    status:true,
+                    title:"Error de validación",
+                    desc:"El correo electrónico no es válido.",
+                }); 
+                return; 
+            } else {
+                if (!activo) {
+                    addAlumno(datos)
+                } else {
+                    modifyAlumno(datos);
+                    setActivo(false);
+                }
+            }
+        }
     };
 
     const handleChange = (e) => {
@@ -149,12 +184,6 @@ const agregar = () => {
                 desc:`La operación falló, ${error.response?.data?.error || error.message}`,
             });
         }
-    };
-
-    const handleEditar = (e) => {
-        e.preventDefault();
-        modifyAlumno(datos);
-        setActivo(false);
     };
 
     const handleEliminar = async (id) => {
@@ -241,7 +270,7 @@ const agregar = () => {
                         </>
                     ) : (
                         <>
-                            <Button variant="primary" type="submit" onClick={handleEditar}> Modificar </Button> {"  "}
+                            <Button variant="primary" type="submit" onClick={handleSubmit}> Modificar </Button> {"  "}
                         </>
                     )
                 }
