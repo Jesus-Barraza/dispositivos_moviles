@@ -34,9 +34,9 @@ const agregar = () => {
         return regex.test(nombre) && nombre.trim().length > 2; 
     }; 
     
-    const validarCorreo = (correo) => { 
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-        return regex.test(correo); 
+    const validarDireccion = (direccion) => { 
+        const regex = /^[a-zA-Z0-9\s.]+$/; 
+        return regex.test(direccion); 
     };
 
     useEffect(() => {
@@ -123,12 +123,12 @@ const agregar = () => {
             }); 
             return; 
         } else { 
-            if (!validarCorreo(datos.correo)) { 
+            if (!validarDireccion(datos.correo)) { 
                 handleAlerta({ 
                     view:true,
                     status:true,
                     title:"Error de validación",
-                    desc:"El correo electrónico no es válido.",
+                    desc:"La dirección no es válida.",
                 }); 
                 return; 
             } else {
