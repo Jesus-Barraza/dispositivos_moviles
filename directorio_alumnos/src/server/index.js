@@ -80,16 +80,16 @@ app.post("/alumno/borrar", async (req,res) => {
 
 app.post("/alumno/modificar", async (req,res) => {
     try {
-        const {matricula, nombre, direccion, telefono} = req.body;
-        if ((matricula === undefined || matricula === null || matricula === "") || !nombre || !direccion || !telefono) {
+        const { matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre } = req.body;
+        if (matricula === undefined || matricula === null || matricula === "") {
             return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
         } else {
-            const sql = "UPDATE alumnos_mov SET nombre = ?, direccion = ?, telefono = ? WHERE matricula = ?";
-            const [result] = await pool.query(sql, [nombre, direccion, telefono, matricula])
+            const sql = "UPDATE alumnos_mov SET aPaterno = ?, aMaterno = ?, nombre = ?, sexo = ?, dCalle = ?, dNumero = ?, dColonia = ?, dCodigoPostal = ?, aTelefono = ?, aCorreo = ?, aFacebook = ?, aInstagram = ?, nombreContacto = ?, telefonoContacto = ?, tipoSangre = ?, contasenha = ?, matricula = ? WHERE matricula = ?";
+            const [result] = await pool.query(sql, [aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, nombreContacto, telefonoContacto, tipoSangre, contrasenha, matricula, matricula])
             if (result.affectedRows > 0) { 
                 return res.status(200).send({ result }); 
             } else { 
-                return res.status(404).send({ error: "No se encontró el alumno con ese matricula" }); 
+                return res.status(401).send({ error: "No se encontró el alumno con ese matricula" }); 
             }
         }
     } catch (err) {

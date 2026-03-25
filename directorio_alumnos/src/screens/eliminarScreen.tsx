@@ -1,5 +1,5 @@
 import {View, Text, SafeAreaView, TextInput, TouchableOpacity, StyleSheet, Alert} from "react-native";
-import {useNavigation, StackActions} from "@react-navigation/native"
+import {useNavigation, StackActions} from "@react-navigation/native";
 import {useState} from "react";
 import axios from "axios";
 
@@ -73,7 +73,7 @@ const EliminarScreen = () => {
     };
 
     const handleRegresar = () => {
-            setAlumno(initialState);
+            handleCancelar()
             navigator.dispatch(StackActions.popToTop());
     };
 
@@ -99,28 +99,34 @@ const EliminarScreen = () => {
     }
 
     const alumnoConsultar = async () => {
-        const mat1 = (mat == "") ? 0 : mat
-        const response = await axios.get(`http://10.0.2.2:5000/alumno/traer/${mat1}`).then((response) => {
-            if (response.data.status == 200) {
-                console.log(response.data);
-                if (response.data.result.length > 0) {
-                    setAlumno(response.data.result[0]);
-                    setShow(true);
+        const mat1 = (mat == "") ? "0" : mat
+        if (/^[0-9]{10}$/.test(mat1)) {
+            const response = await axios.get(`http://10.0.2.2:5000/alumno/traer/${mat1}`).then((response) => {
+                if (response.data.status == 200) {
+                    console.log(response.data);
+                    if (response.data.result.length > 0) {
+                        setAlumno(response.data.result[0]);
+                        setShow(true);
+                    } else {
+                        setAlumno(initialState);
+                        setShow(false);
+                        notify(101);
+                    }
                 } else {
-                    setAlumno(initialState);
-                    setShow(false);
-                    notify(101);
+                    console.log("no fue posible traer los datos")
                 }
-             } else {
-                console.log("no fue posible traer los datos")
-             }
-        })
+            })
+        } else {
+            notify(102);
+        }
     };
 
     const notify = (num: number) => {
         if (num == 201) {
             Alert.alert("Hecho!", "Alumno eliminado!");
             handleCancelar();
+        } else if (num == 102) {
+            Alert.alert("Error!", "La matrícula es incorrecta!")
         } else if (num == 101) {
             Alert.alert("Error!", "No se ha encontrado el alumno!")
         } else if (num == 100) {

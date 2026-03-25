@@ -5,7 +5,6 @@ import {useState} from "react"
 import axios from "axios";
 import {useNavigation, StackActions} from "@react-navigation/native"
 
-
 type alumnoEstructura = {
     matricula:string,
     aPaterno:string,
