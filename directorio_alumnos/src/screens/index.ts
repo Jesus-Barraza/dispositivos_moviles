@@ -1,5 +1,5 @@
-export {default as agregarScreen} from "./agregarScreen.tsx";
-export {default as eliminarScreen} from "./eliminarScreen.tsx";
-export {default as consultarScreen} from "./consultarScreen.tsx";
-export {default as modificarScreen} from "./modificarScreen.tsx";
-export {default as homeScreen} from "./homeScreen.tsx";
+export {default as AgregarScreen} from "./agregarScreen.tsx";
+export {default as EliminarScreen} from "./eliminarScreen.tsx";
+export {default as ConsultarScreen} from "./consultarScreen.tsx";
+export {default as ModificarScreen} from "./modificarScreen.tsx";
+export {default as HomeScreen} from "./homeScreen.tsx";

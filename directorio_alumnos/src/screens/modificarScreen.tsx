@@ -1,11 +1,11 @@
 import {View, Text} from "react-native";
 
-const modificarScreen = () => {
+const ModificarScreen = () => {
     return (
         <View>
-            <Text>Agregar screen</Text>
+            <Text>Modificar screen</Text>
         </View>
     )
 }
 
-export default modificarScreen
+export default ModificarScreen

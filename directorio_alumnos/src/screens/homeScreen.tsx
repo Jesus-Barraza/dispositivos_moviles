@@ -3,7 +3,7 @@ import {View, Text, TouchableOpacity, StyleSheet} from "react-native";
 import {RootStackParams} from "../navigation/StackNavigator";
 import Icon from "@react-native-vector-icons/ionicons"
 
-const homeScreen = () => {
+const HomeScreen = () => {
 
     const navigation = useNavigation<NavigationProp<RootStackParams>>()
     return (
@@ -29,7 +29,7 @@ const homeScreen = () => {
     )
 }
 
-export default homeScreen
+export default HomeScreen
 
 const styles = StyleSheet.create({
     container: {

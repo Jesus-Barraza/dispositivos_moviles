@@ -1,11 +1,11 @@
 import {View, Text} from "react-native";
 
-const consultarScreen = () => {
+const ConsultarScreen = () => {
     return (
         <View>
-            <Text>Agregar screen</Text>
+            <Text>Consultar screen</Text>
         </View>
     )
 }
 
-export default consultarScreen
+export default ConsultarScreen
