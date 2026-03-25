@@ -59,6 +59,7 @@ app.post("/alumno/agregar", async (req,res) => {
         const [result] = await pool.query(sql, [matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre]);
         return res.status(200).send({ result })
     } catch (err) {
+        console.error(err)
         return res.status(500).send({error: err.message || err})
     }
 });
@@ -78,14 +79,14 @@ app.post("/alumno/borrar", async (req,res) => {
     }
 });
 
-app.post("/alumno/modificar", async (req,res) => {
+/* app.post("/alumno/modificar", async (req,res) => {
     try {
         const { matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre } = req.body;
         if (matricula === undefined || matricula === null || matricula === "") {
             return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
         } else {
-            const sql = "UPDATE alumnos_mov SET aPaterno = ?, aMaterno = ?, nombre = ?, sexo = ?, dCalle = ?, dNumero = ?, dColonia = ?, dCodigoPostal = ?, aTelefono = ?, aCorreo = ?, aFacebook = ?, aInstagram = ?, nombreContacto = ?, telefonoContacto = ?, tipoSangre = ?, contasenha = ?, matricula = ? WHERE matricula = ?";
-            const [result] = await pool.query(sql, [aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, nombreContacto, telefonoContacto, tipoSangre, contrasenha, matricula, matricula])
+            const sql = "UPDATE alumnos_mov SET aPaterno = ?, aMaterno = ?, nombre = ?, sexo = ?, dCalle = ?, dNumero = ?, dColonia = ?, dCodigoPostal = ?, aTelefono = ?, aCorreo = ?, aFacebook = ?, aInstagram = ?, nombreContacto = ?, telefonoContacto = ?, tipoSangre = ?, contasenha = ? WHERE matricula = ?";
+            const [result] = await pool.query(sql, [aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, nombreContacto, telefonoContacto, tipoSangre, contrasenha, matricula])
             if (result.affectedRows > 0) { 
                 return res.status(200).send({ result }); 
             } else { 
@@ -95,13 +96,78 @@ app.post("/alumno/modificar", async (req,res) => {
     } catch (err) {
         return res.status(500).send({error: err.message || err})
     }
+}); */
+
+app.post("/alumno/modificar", async (req, res) => {
+  try {
+    const {
+      matricula,
+      aPaterno, aMaterno, nombre, sexo,
+      dCalle, dNumero, dColonia, dCodigoPostal,
+      aTelefono, aCorreo, aFacebook, aInstagram,
+      tipoSangre, nombreContacto, telefonoContacto, contrasenha
+    } = req.body;
+
+    if (!matricula || matricula.trim() === "") {
+      return res.status(400).send({ error: "No se ha proporcionado la matrícula" });
+    }
+
+    const sql = `
+      UPDATE alumnos_mov 
+      SET aPaterno = ?, aMaterno = ?, nombre = ?, sexo = ?, dCalle = ?, dNumero = ?, 
+          dColonia = ?, dCodigoPostal = ?, aTelefono = ?, aCorreo = ?, aFacebook = ?, 
+          aInstagram = ?, tipoSangre = ?, nombreContacto = ?, telefonoContacto = ?, 
+          contrasenha = ?
+      WHERE matricula = ?
+    `;
+
+    const params = [
+      aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal,
+      aTelefono, aCorreo, aFacebook, aInstagram,
+      tipoSangre, nombreContacto, telefonoContacto, contrasenha,
+      matricula
+    ];
+
+    console.log("Ejecutando UPDATE con params:", params);
+
+    const [result] = await pool.query(sql, params);
+    console.log("Resultado del UPDATE:", result);
+
+    if (result.affectedRows > 0) {
+      const [rows] = await pool.query("SELECT * FROM alumnos_mov WHERE matricula = ?", [matricula]);
+      return res.status(200).send({ status: 200, result: rows });
+    } else {
+      return res.status(404).send({ error: "No se encontró el alumno con esa matrícula" });
+    }
+  } catch (err) {
+    console.error("Error en /alumno/modificar:", err);
+    return res.status(500).send({ error: err.message || err });
+  }
 });
+
+
 
 app.get("/alumno/traer/:matricula", async (req, res) => {
     try {
         const { matricula } = req.params; 
         const sql = "SELECT * FROM alumnos_mov WHERE matricula = ?";
         const [rows] = await pool.query(sql, [matricula]);
+
+        if (rows.length > 0) {
+            return res.status(200).send({ status: 200, result: rows });
+        } else {
+            return res.status(200).send({ status: 200, result: [] });
+        }
+    } catch (err) {
+        return res.status(500).send({ status: 500, error: err.message || err });
+    }
+});
+
+app.get("/alumno/buscar/:nombre", async (req, res) => {
+    try {
+        const { nombre } = req.params; 
+        const sql = "SELECT * FROM alumnos_mov WHERE nombre LIKE ?";
+        const [rows] = await pool.query(sql, [`%${nombre}%`]);
 
         if (rows.length > 0) {
             return res.status(200).send({ status: 200, result: rows });

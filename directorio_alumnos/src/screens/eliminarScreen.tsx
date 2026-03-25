@@ -192,7 +192,7 @@ export default EliminarScreen
 const styles = StyleSheet.create({
     container: {
         padding: 20,
-        backgroundColor: "#e8f5e9",
+        backgroundColor: "#f5e8e8",
         marginBottom: 20,
     },
     title: {

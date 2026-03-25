@@ -52,7 +52,7 @@ const validationSchema = Yup.object().shape({
     aPaterno:Yup.string().required("Apellido paterno obligatorio"),
     aMaterno:Yup.string().required("Apellido materno obligatorio"),
     nombre:Yup.string().required("Nombre obligatorio"),
-    sexo:Yup.number().min(1, "Selecciona un sexo válido").required(),
+    sexo:Yup.string().min(1, "Selecciona un sexo válido").required(),
     dCalle:Yup.string().required("Calle obligatoria"),
     dNumero: Yup.number().typeError("Debe ser un número").required("Número obligatorio"),
     dColonia:Yup.string().required("Colonia obligatoria"),
@@ -87,9 +87,9 @@ const ModificarScreen = () => {
     const [btns, setBtns] = useState<botonEstado>(initialStateBtn)
 
     const notify = (num: number) => {
-        if (num == 201) {
+        if (num == 200) {
             Alert.alert("Hecho!", "Alumno Actualizado!");
-            handleCancelar();
+            handleRegresar();
         } else if (num == 102) {
             Alert.alert("Error!", "La matrícula es incorrecta!")
         } else if (num == 101) {
@@ -135,9 +135,8 @@ const ModificarScreen = () => {
     const handleSubmit = async () => {
         try {
             await validationSchema.validate(alumno, {abortEarly:false});
-            console.log("Alumno a enviar:", alumno);
-            const response=await axios.post(
-                "http://10.0.2.2:5000/alumno/modificar", alumno).then((response) => {
+            console.log("Alumno a enviar:", Object.keys(alumno));
+            const response=await axios.post("http://10.0.2.2:5000/alumno/modificar", alumno, {headers: { "Content-Type": "application/json" }}).then((response) => {
                     console.log(response);
                     notify(response.status);
                 }).catch(function (error) {
@@ -176,45 +175,45 @@ const ModificarScreen = () => {
                 <Text style={styles.buttonText}>Buscar</Text>
             </TouchableOpacity>
 
-            <TextInput style={styles.input} placeholder="Matrícula" placeholderTextColor="#888" maxLength={10} onChangeText={(val) => handleChange("matricula", val)}/>
-            <TextInput style={styles.input} placeholder="Apellido paterno" placeholderTextColor="#888" onChangeText={(val) => handleChange("aPaterno", val)}/>
-            <TextInput style={styles.input} placeholder="Apellido materno" placeholderTextColor="#888" onChangeText={(val) => handleChange("aMaterno", val)}/>
-            <TextInput style={styles.input} placeholder="Nombre(s)" placeholderTextColor="#888" onChangeText={(val) => handleChange("nombre", val)}/>
+            <TextInput style={styles.input} placeholder="Matrícula" placeholderTextColor="#888" value={alumno.matricula} maxLength={10} onChangeText={(val) => handleChange("matricula", val)}/>
+            <TextInput style={styles.input} placeholder="Apellido paterno" placeholderTextColor="#888" value={alumno.aPaterno} onChangeText={(val) => handleChange("aPaterno", val)}/>
+            <TextInput style={styles.input} placeholder="Apellido materno" placeholderTextColor="#888" value={alumno.aMaterno} onChangeText={(val) => handleChange("aMaterno", val)}/>
+            <TextInput style={styles.input} placeholder="Nombre(s)" placeholderTextColor="#888" value={alumno.nombre} onChangeText={(val) => handleChange("nombre", val)}/>
 
             <Text style={styles.label}> Sexo </Text>
                 <Picker style={styles.picker} selectedValue={alumno.sexo} onValueChange={val => handleChange("sexo", val)}>
-                    <Picker.Item label="Selecciona..." value={0} />
-                    <Picker.Item label="H" value={1} />
-                    <Picker.Item label="M" value={2} />
+                    <Picker.Item label="Selecciona..." value="" />
+                    <Picker.Item label="H" value="H" />
+                    <Picker.Item label="M" value="M" />
                 </Picker>
 
-            <TextInput style={styles.input} placeholder="Calle" placeholderTextColor="#888" onChangeText={(val) => handleChange("dCalle", val)}/>
-            <TextInput style={styles.input} placeholder="Número" placeholderTextColor="#888" keyboardType="numeric" onChangeText={(val) => handleChange("dNumero", val)}/>
-            <TextInput style={styles.input} placeholder="Colonia" placeholderTextColor="#888" onChangeText={(val) => handleChange("dColonia", val)}/>
-            <TextInput style={styles.input} placeholder="Código postal" placeholderTextColor="#888" keyboardType="numeric" onChangeText={(val) => handleChange("dCodigoPostal", val)}/>
+            <TextInput style={styles.input} placeholder="Calle" placeholderTextColor="#888" value={alumno.dCalle} onChangeText={(val) => handleChange("dCalle", val)}/>
+            <TextInput style={styles.input} placeholder="Número" placeholderTextColor="#888" keyboardType="numeric" value={String(alumno.dNumero)} onChangeText={(val) => handleChange("dNumero", Number(val))}/>
+            <TextInput style={styles.input} placeholder="Colonia" placeholderTextColor="#888" value={alumno.dColonia} onChangeText={(val) => handleChange("dColonia", val)}/>
+            <TextInput style={styles.input} placeholder="Código postal" placeholderTextColor="#888" keyboardType="numeric" value={String(alumno.dCodigoPostal)} onChangeText={(val) => handleChange("dCodigoPostal", Number(val))}/>
 
-            <TextInput style={styles.input} placeholder="Teléfono" placeholderTextColor="#888" maxLength={12} keyboardType="phone-pad" onChangeText={(val) => handleChange("aTelefono", val)}/>
-            <TextInput style={styles.input} placeholder="Correo electrónico" placeholderTextColor="#888" keyboardType="email-address" onChangeText={(val) => handleChange("aCorreo", val)}/>
-            <TextInput style={styles.input} placeholder="Facebook" placeholderTextColor="#888" onChangeText={(val) => handleChange("aFacebook", val)}/>
-            <TextInput style={styles.input} placeholder="Instagram" placeholderTextColor="#888" onChangeText={(val) => handleChange("aInstagram", val)}/>
+            <TextInput style={styles.input} placeholder="Teléfono" placeholderTextColor="#888" value={alumno.aTelefono} maxLength={12} keyboardType="phone-pad" onChangeText={(val) => handleChange("aTelefono", val)}/>
+            <TextInput style={styles.input} placeholder="Correo electrónico" placeholderTextColor="#888" value={alumno.aCorreo} keyboardType="email-address" onChangeText={(val) => handleChange("aCorreo", val)}/>
+            <TextInput style={styles.input} placeholder="Facebook" placeholderTextColor="#888" value={alumno.aFacebook} onChangeText={(val) => handleChange("aFacebook", val)}/>
+            <TextInput style={styles.input} placeholder="Instagram" placeholderTextColor="#888" value={alumno.aInstagram} onChangeText={(val) => handleChange("aInstagram", val)}/>
 
             <Text style={styles.label}> Tipo de sangre </Text>
-                <Picker style={styles.picker} selectedValue={alumno.sexo} onValueChange={val => handleChange("tipoSangre", val)}>
-                    <Picker.Item label="Selecciona..." value={0} />
-                    <Picker.Item label="A+" value={1} />
-                    <Picker.Item label="A-" value={2} />
-                    <Picker.Item label="B+" value={1} />
-                    <Picker.Item label="B-" value={2} />
-                    <Picker.Item label="AB+" value={1} />
-                    <Picker.Item label="AB-" value={2} />
-                    <Picker.Item label="O+" value={1} />
-                    <Picker.Item label="O-" value={2} />
+                <Picker style={styles.picker} selectedValue={alumno.tipoSangre} onValueChange={val => handleChange("tipoSangre", val)}>
+                    <Picker.Item label="Selecciona..." value="" />
+                    <Picker.Item label="A+" value="A+" />
+                    <Picker.Item label="A-" value="A-" />
+                    <Picker.Item label="B+" value="B+" />
+                    <Picker.Item label="B-" value="B-" />
+                    <Picker.Item label="AB+" value="AB+" />
+                    <Picker.Item label="AB-" value="AB-" />
+                    <Picker.Item label="O+" value="O+" />
+                    <Picker.Item label="O-" value="O-" />
                 </Picker>
 
-            <TextInput style={styles.input} placeholder="Nombre del contacto de emergencia" placeholderTextColor="#888" onChangeText={(val) => handleChange("nombreContacto", val)}/>
-            <TextInput style={styles.input} placeholder="Teléfono del contacto" placeholderTextColor="#888" maxLength={12} keyboardType="phone-pad" onChangeText={(val) => handleChange("telefonoContacto", val)}/>
+            <TextInput style={styles.input} placeholder="Nombre del contacto de emergencia" placeholderTextColor="#888" value={alumno.nombreContacto} onChangeText={(val) => handleChange("nombreContacto", val)}/>
+            <TextInput style={styles.input} placeholder="Teléfono del contacto" placeholderTextColor="#888" value={alumno.telefonoContacto} maxLength={12} keyboardType="phone-pad" onChangeText={(val) => handleChange("telefonoContacto", val)}/>
 
-            <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor="#888" onChangeText={(val) => handleChange("contrasenha", val)}/>
+            <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor="#888" value={alumno.contrasenha} onChangeText={(val) => handleChange("contrasenha", val)}/>
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                 <Text style={styles.buttonText}>Guardar</Text>
@@ -236,24 +235,24 @@ export default ModificarScreen
 const styles = StyleSheet.create({
     container: {
         padding: 20,
-        backgroundColor: "#e8f5e9",
+        backgroundColor: "#e9e8f5",
         marginBottom: 20,
     },
     title: {
         fontSize:24, 
         fontWeight: "bold",
-        color: "#7d782e",
+        color: "#2e557d",
         marginBottom: 20,
         textAlign:"center",
     },
     label: {
         marginTop:15,
         fontWeight:"bold",
-        color:"#69581e",
+        color:"#1e5e69",
     },
     input: {
         borderWidth: 1,
-        borderColor: "#d4d6a5",
+        borderColor: "#aaa5d6",
         borderRadius: 10,
         padding:10,
         marginVertical:5,
@@ -262,13 +261,13 @@ const styles = StyleSheet.create({
     },
     picker: {
         borderWidth: 1,
-        borderColor: "#d4d6a5",
+        borderColor: "#aaa5d6",
         borderRadius: 10,
         backgroundColor: "#ffffff",
         color: "#0f0f0f",
     },
     button: {
-        backgroundColor:"#989a1e",
+        backgroundColor:"#1e6d9a",
         paddingVertical:12,
         borderRadius:10,
         marginTop:20,
@@ -280,7 +279,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     boton: {
-        backgroundColor:"#e4e6a8",
+        backgroundColor:"#a8dee6",
         paddingVertical:14,
         paddingHorizontal:30,
         borderRadius:12,
@@ -292,7 +291,7 @@ const styles = StyleSheet.create({
         marginBottom:10,
     },
     txtBoton:{
-        color:"#4d4d16",
+        color:"#16224d",
         fontWeight:"600",
         fontSize:16,
         letterSpacing:0.5,
