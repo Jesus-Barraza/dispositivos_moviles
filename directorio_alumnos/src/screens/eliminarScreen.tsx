@@ -1,6 +1,7 @@
-import {View, Text, SafeAreaView, TextInput, TouchableOpacity, StyleSheet} from "react-native";
+import {View, Text, SafeAreaView, TextInput, TouchableOpacity, StyleSheet, Alert} from "react-native";
 import {useNavigation, StackActions} from "@react-navigation/native"
 import {useState} from "react";
+import axios from "axios";
 
 type alumnoEstructura = {
     matricula:string,
@@ -71,6 +72,32 @@ const EliminarScreen = () => {
         setMat(valor)
     };
 
+    const handleRegresar = () => {
+            setAlumno(initialState);
+            navigator.dispatch(StackActions.popToTop());
+    };
+
+    const handleCancelar = () => {
+        setAlumno(initialState);
+        setShow(false);
+        setMat("");
+    };
+
+    const handleEliminar = async () => {
+        console.log(alumno);
+        const response = await axios.post("http://10.0.2.2:5000/alumno/borrar", alumno)
+        .then(response => {
+            console.log(response);
+            if (response.data.result.length > 0) {
+                notify(response.data.status);
+                handleRegresar()
+            } else {
+                notify(response.data.status);
+            }
+        });
+        //setTimeout(() => navigate("/alumnos"), 1000)
+    }
+
     const alumnoConsultar = async () => {
         const mat1 = (mat == "") ? 0 : mat
         const response = await axios.get(`http://10.0.2.2:5000/alumno/traer/${mat1}`).then((response) => {
@@ -89,6 +116,17 @@ const EliminarScreen = () => {
              }
         })
     };
+
+    const notify = (num: number) => {
+        if (num == 201) {
+            Alert.alert("Hecho!", "Alumno eliminado!");
+            handleCancelar();
+        } else if (num == 101) {
+            Alert.alert("Error!", "No se ha encontrado el alumno!")
+        } else if (num == 100) {
+            Alert.alert("Error!", "No se ha eliminado el alumno!")
+        }
+    } 
 
     const navigator = useNavigation()
     return (
@@ -125,13 +163,19 @@ const EliminarScreen = () => {
                         <Text style={styles.infoLabel}>Teléfono contacto:</Text>
                         <Text style={styles.infoValue}>{telefonoContacto}</Text>
                     </View>
+                    <TouchableOpacity onPress={handleEliminar} style={styles.boton}>
+                        <Text style={styles.txtBoton}>Eliminar</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={handleCancelar} style={{...styles.boton, backgroundColor:"#4a4a4a"}}>
+                        <Text style={{... styles.txtBoton, color:"#a4a4a4"}}>Cancelar</Text>
+                    </TouchableOpacity>
                 </>
             ) : (
                 <></>
             )}
-
-            <TouchableOpacity onPress={handleRegresar} style={styles.boton}>
-                <Text style={styles.txtBoton}>Regresar al home</Text>
+            <TouchableOpacity onPress={handleRegresar} style={{... styles.boton, backgroundColor:"#9c9c9c"}}>
+                <Text style={{...styles.txtBoton, color:"#3a3a3a"}}>Regresar al home</Text>
             </TouchableOpacity>
         </SafeAreaView>
     )
@@ -161,7 +205,6 @@ const styles = StyleSheet.create({
         backgroundColor:"#ffffff",  
         color: "#0f0f0f"
     },
-
     btnBuscar: {
         backgroundColor:"#d3d3d3",
         paddingVertical:12,
@@ -176,7 +219,7 @@ const styles = StyleSheet.create({
         alignItems:"center",
         width: "50%",
     },
-    buttonText: {
+    btnTextBuscar: {
         color: "#4F4F4F",
         fontWeight: "bold",
         fontSize: 16,

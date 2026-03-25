@@ -54,7 +54,7 @@ app.get("/alumno", async (req, res) => {
 app.post("/alumno/agregar", async (req,res) => {
     try {
         const { matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre } = req.body;
-        //const id = uuid()
+        //const matricula = uuid()
         const sql = "INSERT INTO alumnos_mov (matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         const [result] = await pool.query(sql, [matricula, aPaterno, aMaterno, nombre, sexo, dCalle, dNumero, dColonia, dCodigoPostal, aTelefono, aCorreo, aFacebook, aInstagram, contrasenha, nombreContacto, telefonoContacto, tipoSangre]);
         return res.status(200).send({ result })
@@ -65,13 +65,13 @@ app.post("/alumno/agregar", async (req,res) => {
 
 app.post("/alumno/borrar", async (req,res) => {
     try {
-        const {id} = req.body;
-        if (!id) {
+        const { matricula } = req.body;
+        if (!matricula) {
             return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
         } else {
-            const sql = "DELETE FROM alumnos_mov WHERE id = ?";
-            const [result] = await pool.query(sql, [id])
-            return res.status(200).send({ result })
+            const sql = "DELETE FROM alumnos_mov WHERE matricula = ?";
+            const [result] = await pool.query(sql, [matricula])
+            return res.status(201).send({ result })
         }
     } catch (err) {
         return res.status(500).send({error: err.message || err})
@@ -80,16 +80,16 @@ app.post("/alumno/borrar", async (req,res) => {
 
 app.post("/alumno/modificar", async (req,res) => {
     try {
-        const {id, nombre, direccion, telefono} = req.body;
-        if ((id === undefined || id === null || id === "") || !nombre || !direccion || !telefono) {
+        const {matricula, nombre, direccion, telefono} = req.body;
+        if ((matricula === undefined || matricula === null || matricula === "") || !nombre || !direccion || !telefono) {
             return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
         } else {
-            const sql = "UPDATE alumnos_mov SET nombre = ?, direccion = ?, telefono = ? WHERE id = ?";
-            const [result] = await pool.query(sql, [nombre, direccion, telefono, id])
+            const sql = "UPDATE alumnos_mov SET nombre = ?, direccion = ?, telefono = ? WHERE matricula = ?";
+            const [result] = await pool.query(sql, [nombre, direccion, telefono, matricula])
             if (result.affectedRows > 0) { 
                 return res.status(200).send({ result }); 
             } else { 
-                return res.status(404).send({ error: "No se encontró el alumno con ese ID" }); 
+                return res.status(404).send({ error: "No se encontró el alumno con ese matricula" }); 
             }
         }
     } catch (err) {
@@ -97,22 +97,19 @@ app.post("/alumno/modificar", async (req,res) => {
     }
 });
 
-app.post("/alumno/buscar", async (req,res) => {
+app.get("/alumno/traer/:matricula", async (req, res) => {
     try {
-        const {id} = req.body;
-        if (id === undefined || id === null || id === "") {
-            return res.status(400).send({error: "No se han insertado los datos correspondientes, inténtelo de nuevo"})
+        const { matricula } = req.params; 
+        const sql = "SELECT * FROM alumnos_mov WHERE matricula = ?";
+        const [rows] = await pool.query(sql, [matricula]);
+
+        if (rows.length > 0) {
+            return res.status(200).send({ status: 200, result: rows });
         } else {
-            const sql = "SELECT * FROM alumnos_mov WHERE id = ?";
-            const [result] = await pool.query(sql, [id])
-            if (result.length == 0) {
-                return res.status(401).send({ error: "No se encontró el alumno con ese ID" }); 
-            } else {
-                return res.status(200).send({ result })
-            }
+            return res.status(200).send({ status: 200, result: [] });
         }
     } catch (err) {
-        return res.status(500).send({error: err.message || err})
+        return res.status(500).send({ status: 500, error: err.message || err });
     }
 });
 
