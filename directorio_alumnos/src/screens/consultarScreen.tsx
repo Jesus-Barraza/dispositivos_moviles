@@ -1,6 +1,6 @@
 import {View, Text, Alert, SafeAreaView, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, StyleSheet} from "react-native";
 import {useNavigation, StackActions} from "@react-navigation/native";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import axios from "axios";
 
 type alumnoEstructura = {
@@ -69,13 +69,13 @@ const ConsultarScreen = () => {
         contrasenha,
     } = alumno;
 
-    const alumnoConsultar = async () => {
+    const alumnoConsultarNombre = async () => {
         const nombre1 = (name == "") ? "_" : name
         const response = await axios.get(`http://10.0.2.2:5000/alumno/buscar/${nombre1}`).then((response) => {
             if (response.data.status == 200) {
                 console.log(response.data);
                 if (response.data.result.length > 0) {
-                    setAlumno(response.data.result[0]);
+                    setAlumnos(response.data.result);
                     setShow(true);
                 } else {
                     setAlumno(initialState);
@@ -88,18 +88,81 @@ const ConsultarScreen = () => {
         })
     };
 
+    const alumnoConsultarMatricula = async (mat:string) => {
+        const mat1 = (mat == "") ? "0" : mat
+        if (/^[0-9]{10}$/.test(mat1)) {
+            const response = await axios.get(`http://10.0.2.2:5000/alumno/traer/${mat1}`).then((response) => {
+                if (response.data.status == 200) {
+                    console.log(response.data);
+                    if (response.data.result.length > 0) {
+                        setAlumno(response.data.result[0]);
+                        setShow(true);
+                    } else {
+                        notify(101);
+                    }
+                } else {
+                    console.log("no fue posible traer los datos")
+                }
+            })
+        } else {
+            notify(102);
+        }
+    };
+
+    const handleChange = (valor: string):void => {
+        setName(valor)
+    };
+
+    const handleBuscar = () => {
+        alumnoConsultarNombre();
+    };
+
+    const handleClose = () => {
+        setAlumno(initialState);
+        setShow(false);
+    }
+
+    const handleRegresar = () => {
+        handleClose();
+        navigator.dispatch(StackActions.popToTop());
+    };
+
     const notify = (num: number) => {
-        if (num == 201) {
-            Alert.alert("Hecho!", "Alumno eliminado!");
-            handleCancelar();
-        } else if (num == 102) {
+        if (num == 102) {
             Alert.alert("Error!", "La matrícula es incorrecta!")
         } else if (num == 101) {
             Alert.alert("Error!", "No se ha encontrado el alumno!")
         } else if (num == 100) {
             Alert.alert("Error!", "No se ha eliminado el alumno!")
         }
-    } 
+    };
+
+    useEffect(() => {
+        alumnoConsultarNombre();
+    }, []);
+
+    const renderItem = ({item}: {item: alumnoEstructura}) => (
+        <View style={styles.card}>
+            <Text style={styles.label}>Matrícula:</Text>
+            <Text style={styles.text}>{item.matricula}</Text>
+            <Text style={styles.label}>Nombre:</Text>
+            <Text style={styles.text}>{item.nombre} {item.aPaterno} {item.aMaterno}</Text>
+            <Text style={styles.label}>Correo:</Text>
+            <Text style={styles.text}>{item.aCorreo}</Text>
+            <Text style={styles.label}>Teléfono:</Text>
+            <Text style={styles.text}>{item.aTelefono}</Text>
+            <TouchableOpacity style={styles.boton} onPress={() => alumnoConsultarMatricula(item.matricula)}>
+                <Text style={styles.txtBoton}>Consultar</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderField = (label: string, value: string) => (
+        <View style={styles.field}>
+            <Text style={styles.label}>{label}</Text>
+            <Text style={styles.value}>{value}</Text>
+        </View>
+    );
 
     const navigator = useNavigation()
     return (
