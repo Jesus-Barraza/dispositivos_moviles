@@ -1,6 +1,6 @@
 import {View, Text, Alert, SafeAreaView, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, StyleSheet} from "react-native";
 import {useNavigation, StackActions} from "@react-navigation/native";
-import {useState, useEffect} from "react";
+import React, {useState, useEffect} from "react";
 import axios from "axios";
 
 type alumnoEstructura = {
