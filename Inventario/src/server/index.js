@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import crypto from "crypto";
 
 const app = express();
 const port = 5000;
@@ -42,6 +43,45 @@ function bufferContainsImageBytes(buf) {
   return false;
 }
 
+// Util: detectar MIME por bytes
+function detectImageMime(buf) {
+  if (!Buffer.isBuffer(buf)) return null;
+  const hexStart = buf.slice(0, 4).toString("hex");
+  if (hexStart.startsWith("ffd8ff")) return "image/jpeg";
+  const ascii8 = buf.slice(0, 8).toString("ascii");
+  if (ascii8.startsWith("\x89PNG\r\n\x1a\n")) return "image/png";
+  return null;
+}
+
+// Util: convertir campo imagen de la BD a Buffer (maneja bytes, texto base64 y data: URIs)
+function normalizeImagenToBuffer(imagenField) {
+  if (!imagenField) return null;
+
+  if (Buffer.isBuffer(imagenField)) {
+    // Si ya son bytes, devolver tal cual
+    return imagenField;
+  }
+
+  if (typeof imagenField === "string") {
+    let s = imagenField.replace(/\r?\n|\r|\s+/g, "");
+    if (s.startsWith("data:")) s = s.split(",")[1];
+    try {
+      // Intentar decodificar base64
+      return Buffer.from(s, "base64");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Otros tipos: intentar convertir a string y decodificar
+  try {
+    const s = String(imagenField).replace(/\r?\n|\r|\s+/g, "");
+    return Buffer.from(s, "base64");
+  } catch (e) {
+    return null;
+  }
+}
+
 // Root
 app.get("/", (req, res) => res.send("Hola mundo"));
 
@@ -50,13 +90,14 @@ app.post("/producto", async (req, res) => {
   try {
     const { nombre, precio, cantidad, categoria, imagen } = req.body;
     if (!nombre?.trim() || !Number.isFinite(precio) || !Number.isFinite(cantidad) || !categoria?.trim()) {
-      return res.status(400).send({ error: "No se han insertado los datos correspondientes" });
+      return res.status(400).send({ error: "Faltan datos" });
     }
 
     let imagenBuffer = null;
     if (imagen) {
       const cleaned = String(imagen).replace(/\r?\n|\r|\s+/g, "");
-      imagenBuffer = Buffer.from(cleaned, "base64");
+      const base64part = cleaned.startsWith("data:") ? cleaned.split(",")[1] : cleaned;
+      imagenBuffer = Buffer.from(base64part, "base64");
     }
 
     const sql = "INSERT INTO productos (nombre, precio, cantidad, categoria, imagen) VALUES (?,?,?,?,?)";
@@ -73,18 +114,22 @@ app.put("/producto/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, precio, cantidad, categoria, imagen } = req.body;
-    if (!id || !nombre || !Number.isFinite(precio) || !Number.isFinite(cantidad) || !categoria) {
+    console.log("PUT /producto/:id body:", req.params, req.body && { ...req.body, imagen: req.body.imagen ? "[base64 length " + String(req.body.imagen).length + "]" : null });
+    const parsedPrecio = Number(precio);
+    const parsedCantidad = Number(cantidad);
+    if (!id || !nombre || !Number.isFinite(parsedPrecio) || !Number.isFinite(parsedCantidad) || !categoria) {
       return res.status(401).send({ error: "Faltan datos" });
     }
 
     let imagenBuffer = null;
     if (imagen) {
       const cleaned = String(imagen).replace(/\r?\n|\r|\s+/g, "");
-      imagenBuffer = Buffer.from(cleaned, "base64");
+      const base64part = cleaned.startsWith("data:") ? cleaned.split(",")[1] : cleaned;
+      imagenBuffer = Buffer.from(base64part, "base64");
     }
 
     const sql = "UPDATE productos SET nombre = ?, precio = ?, cantidad = ?, categoria = ?, imagen = ? WHERE id = ?";
-    const [result] = await pool.query(sql, [nombre, precio, cantidad, categoria, imagenBuffer, id]);
+    const [result] = await pool.query(sql, [nombre, parsedPrecio, parsedCantidad, categoria, imagenBuffer, id]);
     if (result.affectedRows > 0) return res.status(200).send({ status: 200, result });
     return res.status(404).send({ status: 404, error: "No se encontró el producto" });
   } catch (err) {
@@ -103,13 +148,9 @@ app.get("/producto/detalle/:id", async (req, res) => {
     const productos = rows.map((p) => {
       let imagenBase64 = "";
       if (p.imagen) {
-        if (Buffer.isBuffer(p.imagen)) {
-          if (bufferContainsImageBytes(p.imagen)) {
-            imagenBase64 = p.imagen.toString("base64");
-          } else {
-            const asText = p.imagen.toString("utf8").replace(/\r?\n|\r|\s+/g, "");
-            imagenBase64 = asText.startsWith("data:") ? asText.split(",")[1] : asText;
-          }
+        const buf = normalizeImagenToBuffer(p.imagen);
+        if (buf && bufferContainsImageBytes(buf)) {
+          imagenBase64 = buf.toString("base64");
         } else if (typeof p.imagen === "string") {
           let s = p.imagen.replace(/\r?\n|\r|\s+/g, "");
           if (s.startsWith("data:")) s = s.split(",")[1];
@@ -139,13 +180,9 @@ app.get("/producto/:nombre", async (req, res) => {
     const productos = rows.map((p) => {
       let imagenBase64 = "";
       if (p.imagen) {
-        if (Buffer.isBuffer(p.imagen)) {
-          if (bufferContainsImageBytes(p.imagen)) {
-            imagenBase64 = p.imagen.toString("base64");
-          } else {
-            const asText = p.imagen.toString("utf8").replace(/\r?\n|\r|\s+/g, "");
-            imagenBase64 = asText.startsWith("data:") ? asText.split(",")[1] : asText;
-          }
+        const buf = normalizeImagenToBuffer(p.imagen);
+        if (buf && bufferContainsImageBytes(buf)) {
+          imagenBase64 = buf.toString("base64");
         } else if (typeof p.imagen === "string") {
           let s = p.imagen.replace(/\r?\n|\r|\s+/g, "");
           if (s.startsWith("data:")) s = s.split(",")[1];
@@ -164,86 +201,66 @@ app.get("/producto/:nombre", async (req, res) => {
   }
 });
 
+// NEW: GET /producto/:id/image - sirve la imagen como recurso (Content-Type + bytes)
+app.get("/producto/:id/image", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).send({ error: "Faltan datos" });
+
+    const sql = "SELECT imagen FROM productos WHERE id = ?";
+    const [rows] = await pool.query(sql, [id]);
+    if (!rows || rows.length === 0) return res.status(404).send({ error: "No se encontró el producto" });
+
+    const raw = rows[0].imagen;
+    if (!raw) return res.status(404).send({ error: "No hay imagen para este producto" });
+
+    // Normalizar a Buffer
+    let buf = normalizeImagenToBuffer(raw);
+    if (!buf) return res.status(500).send({ error: "No se pudo procesar la imagen" });
+
+    // Si el buffer no parece contener bytes de imagen, intentar decodificar doble-base64
+    if (!bufferContainsImageBytes(buf)) {
+      // intentar interpretar como texto base64 -> bytes
+      const asText = buf.toString("utf8").replace(/\r?\n|\r|\s+/g, "");
+      try {
+        const inner = Buffer.from(asText, "base64");
+        if (bufferContainsImageBytes(inner)) buf = inner;
+      } catch (e) {
+        // dejar buf como está
+      }
+    }
+
+    const mime = detectImageMime(buf) || "application/octet-stream";
+    const etag = crypto.createHash("md5").update(buf).digest("hex");
+
+    // Soporta If-None-Match para caching
+    if (req.headers["if-none-match"] === etag) {
+      return res.status(304).end();
+    }
+
+    res.setHeader("Content-Type", mime);
+    res.setHeader("Content-Length", buf.length);
+    res.setHeader("Cache-Control", "public, max-age=86400"); // 1 día
+    res.setHeader("ETag", etag);
+
+    return res.status(200).send(buf);
+  } catch (err) {
+    console.error("GET /producto/:id/image error:", err);
+    return res.status(500).send({ error: err.message || err });
+  }
+});
+
 // DELETE /producto/:id
 app.delete("/producto/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) return res.status(401).send({ error: "No se han insertado los datos correspondientes" });
+    if (!id) return res.status(401).send({ error: "Faltan datos" });
     const sql = "DELETE FROM productos WHERE id = ?";
     const [result] = await pool.query(sql, [id]);
     if (result.affectedRows > 0) return res.status(200).send({ result });
     return res.status(404).send({ error: "ID desconocida" });
   } catch (err) {
     console.error("DELETE /producto/:id error:", err);
-    return res.status(500).send({ error: err.message || err });
-  }
-});
-
-// Endpoint temporal: /diagnose
-app.get("/diagnose", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT id, imagen FROM productos");
-    const problemas = [];
-    for (const r of rows) {
-      if (!r.imagen) continue;
-      const buf = Buffer.isBuffer(r.imagen) ? r.imagen : Buffer.from(String(r.imagen), "utf8");
-      const hexStart = buf.slice(0, 4).toString("hex");
-      const ascii8 = buf.slice(0, 8).toString("ascii");
-      const looksLikeImageBytes = hexStart.startsWith("ffd8ff") || ascii8.startsWith("\x89PNG\r\n\x1a\n");
-      if (!looksLikeImageBytes) {
-        const s = buf.toString("utf8").replace(/\r?\n|\r|\s+/g, "");
-        try {
-          const once = Buffer.from(s, "base64").toString("utf8").slice(0, 12);
-          if (once.startsWith("iVBORw0K") || once.startsWith("/9j/")) {
-            problemas.push({ id: r.id, issue: "double-base64" });
-          } else {
-            problemas.push({ id: r.id, issue: "text-base64" });
-          }
-        } catch (e) {
-          problemas.push({ id: r.id, issue: "unknown", err: e.message });
-        }
-      }
-    }
-    return res.status(200).send({ status: 200, problemas });
-  } catch (err) {
-    console.error("GET /diagnose error:", err);
-    return res.status(500).send({ error: err.message || err });
-  }
-});
-
-// Endpoint temporal: /repair
-app.post("/repair", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT id, imagen FROM productos");
-    const fixes = [];
-    for (const r of rows) {
-      if (!r.imagen) continue;
-      const buf = Buffer.isBuffer(r.imagen) ? r.imagen : Buffer.from(String(r.imagen), "utf8");
-      const hexStart = buf.slice(0, 4).toString("hex");
-      const ascii8 = buf.slice(0, 8).toString("ascii");
-      const looksLikeImageBytes = hexStart.startsWith("ffd8ff") || ascii8.startsWith("\x89PNG\r\n\x1a\n");
-      if (looksLikeImageBytes) continue;
-
-      const ascii = buf.toString("utf8").replace(/\r?\n|\r|\s+/g, "");
-      try {
-        const once = Buffer.from(ascii, "base64").toString("utf8").slice(0, 12);
-        if (once.startsWith("iVBORw0K") || once.startsWith("/9j/")) {
-          const innerBase64 = Buffer.from(ascii, "base64").toString("utf8");
-          const imageBytes = Buffer.from(innerBase64, "base64");
-          await pool.query("UPDATE productos SET imagen = ? WHERE id = ?", [imageBytes, r.id]);
-          fixes.push({ id: r.id, action: "fixed double-base64" });
-        } else {
-          const imageBytes = Buffer.from(ascii, "base64");
-          await pool.query("UPDATE productos SET imagen = ? WHERE id = ?", [imageBytes, r.id]);
-          fixes.push({ id: r.id, action: "converted base64-text-to-bytes" });
-        }
-      } catch (e) {
-        fixes.push({ id: r.id, action: "error", err: e.message });
-      }
-    }
-    return res.status(200).send({ status: 200, fixes });
-  } catch (err) {
-    console.error("POST /repair error:", err);
     return res.status(500).send({ error: err.message || err });
   }
 });

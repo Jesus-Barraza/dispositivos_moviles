@@ -1,7 +1,7 @@
 import {Alert, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet} from "react-native";
 import {useNavigation, StackActions} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker"
-import {useState} from "react";
+import React, {useState} from "react";
 import * as Yup from 'yup';
 import axios from "axios";
 
